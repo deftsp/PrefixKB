@@ -16,4 +16,7 @@
 - (NSString *)echoString;
 - (void)keyDown:(NSEvent *)e;
 - (void)setEchoString:(NSString *)s;
+
+- (void)moveWindowToNextMonotor;
+
 @end

@@ -80,6 +80,7 @@
 - (void)dealloc
 {
 	[super dealloc];
+    [keyResponder_ release];
 }
 
 

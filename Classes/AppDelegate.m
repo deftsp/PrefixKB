@@ -37,19 +37,18 @@
 }
 
 
-
+// register Command-i as active hot key
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    
+#ifndef DEBUG     
     DDHotKeyCenter *c = [[DDHotKeyCenter alloc] init];
     
-	if (![c registerHotKeyWithKeyCode:0x22 modifierFlags:NSControlKeyMask target:self action:@selector(hotkeyWithEvent:) object:nil]) {
+	if (![c registerHotKeyWithKeyCode:0x22 modifierFlags:NSCommandKeyMask target:self action:@selector(hotkeyWithEvent:) object:nil]) {
 		NSLog(@"Unable to register hotkey");
 	}
     
 	[c release];
-
-
+#endif
 }
 
 
@@ -58,13 +57,15 @@
 
 }
 
-
+// unregister Command-i as active key
 - (void)applicationWillTerminate:(NSNotification *)notification
 {
+#ifndef DEBUG
     DDHotKeyCenter * c= [[DDHotKeyCenter alloc] init];
-	[c unregisterHotKeyWithKeyCode:0x22 modifierFlags:NSControlKeyMask];
+	[c unregisterHotKeyWithKeyCode:0x22 modifierFlags:NSCommandKeyMask];
 	NSLog(@"Unregistered hotkey");
 	[c release];
+#endif    
 }
 
 

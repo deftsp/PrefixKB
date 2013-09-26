@@ -14,17 +14,28 @@ NSMutableArray *applicationStack;
 
 @implementation KeyResponder
 
+- (void)dealloc
+{
+    [echoString_ release];
+
+    [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
+    [applicationStack release];
+
+    [super dealloc];
+}
+
 - (id)init
 {
     self = [super init];
     if (self) {
         // Initialization code here.
         applicationStack = [[NSMutableArray alloc] init];
-        echoString_ = [[NSString alloc] initWithString:@"C-i "];
+        echoString_ = [[NSString alloc] initWithString:@"⌘-i "];
 
-        [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
-                                                               selector:@selector(handleApplicationActivate:)
-                                                                   name:NSWorkspaceDidActivateApplicationNotification object:nil];
+        [[[NSWorkspace sharedWorkspace] notificationCenter]
+            addObserver:self
+               selector:@selector(handleApplicationActivate:)
+                   name:NSWorkspaceDidActivateApplicationNotification object:nil];
     }
 
     return self;
@@ -43,9 +54,9 @@ NSMutableArray *applicationStack;
     if (![deactiveAppName isEqualToString:[[NSRunningApplication currentApplication] localizedName]]) {
         if (![deactiveAppName isEqualToString:[applicationStack lastObject]]) {
             if ([applicationStack count] > 0) {
-                        [applicationStack removeObjectIdenticalTo:deactiveAppName];
+                [applicationStack removeObjectIdenticalTo:deactiveAppName];
             }
-                
+
             [applicationStack addObject:deactiveAppName];
 
         }
@@ -138,73 +149,78 @@ NSMutableArray *applicationStack;
     NSString *curKeyString = [NSString stringWithString:[self getKeyString:e]];
 
     if ((actionString = [[NSUserDefaults standardUserDefaults] objectForKey:curKeyString]) != nil) {
-            actionComponents = [actionString componentsSeparatedByString:@" "];
-            action = [actionComponents objectAtIndex:0];
+        actionComponents = [actionString componentsSeparatedByString:@" "];
+        action = [actionComponents objectAtIndex:0];
 
-            ////////////
-            if ([action isEqualToString:@"Open"]) {
-                actionArg = [actionComponents objectAtIndex:1];
-               
-                [[NSWorkspace sharedWorkspace] launchApplication:actionArg];
-                 [[NSApplication sharedApplication] hide:self];
-                return ;
-            }
+        ////////////
+        if ([action isEqualToString:@"Open"]) {
+            actionArg = [actionComponents objectAtIndex:1];
 
-            if ([action isEqualToString:@"Quit"]) {
-                [[NSApplication sharedApplication] hide:self];
-                [self setEchoString:@"C-i "];
-                return ;
-            }
-
-            if ([action isEqualToString:@"Next"]) {
-                NSString *lastAppName;
-
-                if ([applicationStack count] > 0) {
-                    lastAppName = [applicationStack lastObject];
-                    [[NSWorkspace sharedWorkspace] launchApplication:lastAppName];
-                }
-
-                return ;
-            }
-
-            if ([action isEqualToString:@"Prev"]) {
-                NSString *lastAppName;
-                NSUInteger numOfAppInStack = [applicationStack count];
-
-                if (numOfAppInStack == 0) {
-                    return ;
-                } else if (numOfAppInStack == 1) {
-                    lastAppName = [applicationStack objectAtIndex:0];
-                } else {
-                    lastAppName = [applicationStack objectAtIndex:(numOfAppInStack -2)];
-                }
-
-                [[NSWorkspace sharedWorkspace] launchApplication:lastAppName];
-
-                return ;
-            }
-
-            if ([action isEqualToString:@"Last"]) {
-                NSString *lastAppName;
-                NSUInteger numOfAppInStack = [applicationStack count];
-
-                if (numOfAppInStack == 0) {
-                    return ;
-                } else if (numOfAppInStack == 1) {
-                    lastAppName = [applicationStack objectAtIndex:0];
-                } else {
-                    lastAppName = [applicationStack objectAtIndex:(numOfAppInStack -2)];
-                }
-
-                [[NSWorkspace sharedWorkspace] launchApplication:lastAppName];
-
-                return ;
-            }
-
-
-            [self setEchoString:[NSString stringWithString:@"error action"]];
+            [[NSWorkspace sharedWorkspace] launchApplication:actionArg];
+            [[NSApplication sharedApplication] hide:self];
             return ;
         }
+
+        if ([action isEqualToString:@"Quit"]) {
+            [[NSApplication sharedApplication] hide:self];
+            [self setEchoString:@"⌘-i "];
+            return ;
+        }
+
+        if ([action isEqualToString:@"Next"]) {
+            NSString *lastAppName;
+
+            if ([applicationStack count] > 0) {
+                lastAppName = [applicationStack lastObject];
+                [[NSWorkspace sharedWorkspace] launchApplication:lastAppName];
+            }
+
+            return ;
+        }
+
+        if ([action isEqualToString:@"Prev"]) {
+            NSString *lastAppName;
+            NSUInteger numOfAppInStack = [applicationStack count];
+
+            if (numOfAppInStack == 0) {
+                return ;
+            } else if (numOfAppInStack == 1) {
+                lastAppName = [applicationStack objectAtIndex:0];
+            } else {
+                lastAppName = [applicationStack objectAtIndex:(numOfAppInStack -2)];
+            }
+
+            [[NSWorkspace sharedWorkspace] launchApplication:lastAppName];
+
+            return ;
+        }
+
+        if ([action isEqualToString:@"Last"]) {
+            NSString *lastAppName;
+            NSUInteger numOfAppInStack = [applicationStack count];
+
+            if (numOfAppInStack == 0) {
+                return ;
+            } else if (numOfAppInStack == 1) {
+                lastAppName = [applicationStack objectAtIndex:0];
+            } else {
+                lastAppName = [applicationStack objectAtIndex:(numOfAppInStack -2)];
+            }
+
+            [[NSWorkspace sharedWorkspace] launchApplication:lastAppName];
+
+            return ;
+        }
+
+        if ([action isEqualToString:@"MoveToNextMonitor"]) {
+            [self moveWindowToNextMonotor];
+
+        }
+
+
+        [self setEchoString:@"error action"];
+        return ;
+    }
 
 
     [self setEchoString:[NSString stringWithFormat:@"<%@> is undefined", curKeyString]];
@@ -224,14 +240,32 @@ NSMutableArray *applicationStack;
 	echoString_ = s;
 }
 
-- (void)dealloc
+
+
+- (void)moveWindowToNextMonotor
 {
-    [echoString_ release];
+//    //get info about the currently active application
+//    NSWorkspace* workspace = [NSWorkspace sharedWorkspace];
+//    NSDictionary* currentAppInfo = [workspace activeApplication];
+//    
+//  //  [NSRunningApplication runningApplicationsWithBundleIdentifier:];
+//    
+//    NSRect screenRect = [[NSScreen mainScreen] frame];
+//    NSArray *screens = [NSScreen screens];
+//    int preferredDisplay =  [[[NSUserDefaults  standardUserDefaults]
+//                                 objectForKey:@"PreferredDisplayID"] intValue];
+//
+//    for (id screen in screens) {
+//        CGDirectDisplayID display = (CGDirectDisplayID) [[[screen
+//                                                              deviceDescription] valueForKey:@"NSScreenNumber"] unsignedIntValue];
+//        if ( preferredDisplay == display ) {
+//            screenRect = [screen frame];
+//            break;
+//        }
+//    }
 
-    [[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self];
-    [applicationStack release];
+    //  [win setFrame:screenRect display:YES];
 
-    [super dealloc];
 }
 
 @end
