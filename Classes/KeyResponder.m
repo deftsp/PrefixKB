@@ -1,3 +1,4 @@
+
 //
 //  KeyResponder.m
 //  prefixKB
@@ -143,13 +144,15 @@ NSMutableArray *applicationStack;
 - (void)keyDown:(NSEvent *)e
 {
     NSString *actionString;
-    NSArray *actionComponents;
+    NSMutableArray *actionComponents;
     NSString *action;
     NSString *actionArg;
     NSString *curKeyString = [NSString stringWithString:[self getKeyString:e]];
+    NSUserDefaults *defaultValues = [NSUserDefaults standardUserDefaults];
 
-    if ((actionString = [[NSUserDefaults standardUserDefaults] objectForKey:curKeyString]) != nil) {
-        actionComponents = [actionString componentsSeparatedByString:@" "];
+    if ((actionString = [defaultValues objectForKey:curKeyString]) != nil) {
+        actionComponents = (NSMutableArray *)[actionString componentsSeparatedByString:@" "];
+        [actionComponents removeObject:@""]; // This removes all objects like @""
         action = [actionComponents objectAtIndex:0];
 
         ////////////
@@ -160,6 +163,29 @@ NSMutableArray *applicationStack;
             [[NSApplication sharedApplication] hide:self];
             return ;
         }
+
+        if ([action isEqualToString:@"RunSCPT"]) {
+            actionArg = [actionComponents objectAtIndex:1];
+
+            NSDictionary* errors = [NSDictionary dictionary];
+            NSString *scptPath = [actionArg stringByExpandingTildeInPath];
+            BOOL isFileExist = [[NSFileManager defaultManager] fileExistsAtPath:scptPath];
+
+            if (isFileExist) {
+                NSURL* scptURL = [NSURL fileURLWithPath:scptPath];
+                NSAppleScript* appleScript = [[NSAppleScript alloc] initWithContentsOfURL:scptURL error:&errors];
+                [appleScript executeAndReturnError:nil];
+                [appleScript release];
+            } else {
+                NSAlert *alert = [[[NSAlert alloc] init] autorelease];
+                NSString* msg = [NSString stringWithFormat:@"Can not found file: %@", actionArg];
+                [alert setMessageText:msg];
+                [alert runModal];
+            }
+
+            return ;
+        }
+
 
         if ([action isEqualToString:@"Quit"]) {
             [[NSApplication sharedApplication] hide:self];
@@ -247,9 +273,9 @@ NSMutableArray *applicationStack;
 //    //get info about the currently active application
 //    NSWorkspace* workspace = [NSWorkspace sharedWorkspace];
 //    NSDictionary* currentAppInfo = [workspace activeApplication];
-//    
+//
 //  //  [NSRunningApplication runningApplicationsWithBundleIdentifier:];
-//    
+//
 //    NSRect screenRect = [[NSScreen mainScreen] frame];
 //    NSArray *screens = [NSScreen screens];
 //    int preferredDisplay =  [[[NSUserDefaults  standardUserDefaults]
