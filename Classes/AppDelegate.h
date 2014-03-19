@@ -16,4 +16,6 @@ extern NSMutableArray *applicationStack;
 }
 
 @property (assign) IBOutlet NSWindow *window;
+@property (retain, readwrite) NSUserDefaults *userDefaults;
+
 @end

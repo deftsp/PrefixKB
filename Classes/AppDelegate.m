@@ -12,6 +12,7 @@
 @implementation AppDelegate
 
 @synthesize window;
+@synthesize userDefaults;
 
 
 - (void)hotkeyWithEvent:(NSEvent *)hkEvent
@@ -40,6 +41,13 @@
 // register Command-i as active hot key
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
+    NSMutableDictionary *origValues = [NSMutableDictionary dictionary];
+    [origValues setObject:@"Quit" forKey:@"C-g"];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:origValues];
+    
+    self.userDefaults = [NSUserDefaults standardUserDefaults];
+
+    
     // Adds the option to make the window visible on all spaces
     NSUInteger collectionBehavior = [self.window collectionBehavior];
     collectionBehavior = collectionBehavior | NSWindowCollectionBehaviorCanJoinAllSpaces;
@@ -76,6 +84,12 @@
 
 -(void)awakeFromNib{
 
+}
+
+- (void)dealloc
+{
+    [self.userDefaults dealloc];
+    [super dealloc];
 }
 
 @end

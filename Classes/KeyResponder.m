@@ -8,6 +8,7 @@
 //
 
 #import "KeyResponder.h"
+#import "AppDelegate.h"
 
 #define MAX_APPLICATION_STACK 6
 
@@ -148,7 +149,8 @@ NSMutableArray *applicationStack;
     NSString *action;
     NSString *actionArg;
     NSString *curKeyString = [NSString stringWithString:[self getKeyString:e]];
-    NSUserDefaults *defaultValues = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults *defaultValues = [(AppDelegate *)[NSApp delegate] userDefaults];
+
 
     if ((actionString = [defaultValues objectForKey:curKeyString]) != nil) {
         actionComponents = (NSMutableArray *)[actionString componentsSeparatedByString:@" "];
@@ -166,15 +168,30 @@ NSMutableArray *applicationStack;
 
         if ([action isEqualToString:@"RunSCPT"]) {
             actionArg = [actionComponents objectAtIndex:1];
-
-            NSDictionary* errors = [NSDictionary dictionary];
+            
+            // standardUserDefaults can not "~/this/is/path" as string except restart
+            // it have to write path surrond by '"'.
+            NSUInteger len =[actionArg length];
+            if (len > 2 &&
+                [actionArg characterAtIndex:0] == '"' &&
+                [actionArg characterAtIndex:len - 1] == '"') {
+                NSRange rg = {1, len - 2};
+                actionArg = [actionArg substringWithRange:rg];
+            }
+            
             NSString *scptPath = [actionArg stringByExpandingTildeInPath];
             BOOL isFileExist = [[NSFileManager defaultManager] fileExistsAtPath:scptPath];
+            NSDictionary* errors = [NSDictionary dictionary];
 
             if (isFileExist) {
                 NSURL* scptURL = [NSURL fileURLWithPath:scptPath];
                 NSAppleScript* appleScript = [[NSAppleScript alloc] initWithContentsOfURL:scptURL error:&errors];
-                [appleScript executeAndReturnError:nil];
+                NSDictionary *scriptError = [NSDictionary dictionary];
+                // System Preferences -> Security & Privacy -> Accessibility -> Privacy -> enable PrefixKB
+                // to enable click menu item from applescipt
+                if(![appleScript executeAndReturnError:&scriptError]) {
+                    NSLog(@"%@", [scriptError description]);
+                 }
                 [appleScript release];
             } else {
                 NSAlert *alert = [[[NSAlert alloc] init] autorelease];

@@ -7,6 +7,7 @@
 //
 
 #import "PreferenceController.h"
+#import "AppDelegate.h"
 
 
 @implementation PreferenceController
@@ -103,6 +104,8 @@
 
 - (IBAction)toggleAutoOpen:(id)sender
 {
+    NSUserDefaults *defaultValues = [(AppDelegate *)[NSApp delegate] userDefaults];
+
     if ([autoOpen state]) {
         [defaultValues setObject:@"ture" forKey:@"startup"];
         [self addAppAsLoginItem];

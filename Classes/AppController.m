@@ -9,26 +9,22 @@
 #import "AppController.h"
 #import "PreferenceController.h"
 
-NSUserDefaults *defaultValues;
 
 @implementation AppController
 
 - (id)init
 {
     self = [super init];
-    if (self) {
-        defaultValues = [NSUserDefaults standardUserDefaults];
-    }
+    // if (self) {
+        
+    // }
 
     return self;
 }
 
 + (void)initialize
 {
-    NSMutableDictionary *origValues = [NSMutableDictionary dictionary];
-    
-    [origValues setObject:@"Quit" forKey:@"C-g"];
-    [[NSUserDefaults standardUserDefaults] registerDefaults:origValues];
+
 }
 
 - (IBAction)showPreferencePanel:(id)sender
@@ -63,7 +59,6 @@ NSUserDefaults *defaultValues;
 
 - (void)dealloc
 {
-    [defaultValues release];
     [preferenceController release];
     [statusItem release];
     [super dealloc];

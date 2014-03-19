@@ -8,8 +8,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-extern NSUserDefaults *defaultValues;
-
 @interface PreferenceController : NSWindowController {
     IBOutlet NSButton  *autoOpen;
     IBOutlet NSTableView *tableView;
