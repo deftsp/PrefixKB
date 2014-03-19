@@ -40,6 +40,11 @@
 // register Command-i as active hot key
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
+    // Adds the option to make the window visible on all spaces
+    NSUInteger collectionBehavior = [self.window collectionBehavior];
+    collectionBehavior = collectionBehavior | NSWindowCollectionBehaviorCanJoinAllSpaces;
+    [self.window setCollectionBehavior:collectionBehavior];
+    
 #ifndef DEBUG     
     DDHotKeyCenter *c = [[DDHotKeyCenter alloc] init];
     
